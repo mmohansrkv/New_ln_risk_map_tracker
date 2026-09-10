@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LN Risk Map — Productivity Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#0f1420; --panel:#161d2b; --panel2:#1d2536; --border:#2a3346;
+    --text:#e8ecf4; --muted:#8b96ab; --accent:#5b8cff; --accent2:#7c5cff;
+    --green:#3ecf8e; --amber:#f5b942; --red:#f2545b;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;background:linear-gradient(160deg,#0b0f18,#141a29 60%,#0f1420);color:var(--text);min-height:100vh;}
+  .hidden{display:none !important;}
+  .app{max-width:1100px;margin:0 auto;padding:24px;}
+  h1{font-size:22px;margin:0 0 4px;}
+  h2{font-size:18px;margin:0 0 14px;color:var(--text);}
+  .subtitle{color:var(--muted);font-size:13px;margin-bottom:24px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;margin-top:12px;}
+  input,select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font-size:14px;}
+  input:focus,select:focus{outline:none;border-color:var(--accent);}
+  button{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;transition:.15s;}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+  .btn-primary:hover{filter:brightness(1.1);}
+  .btn-secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
+  .btn-secondary:hover{border-color:var(--accent);}
+  .btn-danger{background:rgba(242,84,91,.15);color:var(--red);border:1px solid rgba(242,84,91,.35);}
+  .btn-danger:hover{background:rgba(242,84,91,.25);}
+  .btn-sm{padding:6px 10px;font-size:12px;}
+  .row{display:flex;gap:8px;align-items:center;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:var(--panel2);border:1px solid var(--border);color:var(--muted);}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px;}
+  th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+  .tab{padding:9px 16px;border-radius:8px;background:var(--panel2);color:var(--muted);border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:600;}
+  .tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;}
+  .center{display:flex;align-items:center;justify-content:center;min-height:100vh;}
+  .login-box{width:380px;}
+  .login-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--panel2);padding:4px;border-radius:10px;}
+  .login-tabs .tab{flex:1;text-align:center;background:transparent;border:none;}
+  .login-tabs .tab.active{background:var(--panel);color:var(--text);}
+  .msg{padding:10px 12px;border-radius:8px;font-size:13px;margin-top:12px;}
+  .msg.error{background:rgba(242,84,91,.12);color:var(--red);border:1px solid rgba(242,84,91,.3);}
+  .msg.ok{background:rgba(62,207,142,.12);color:var(--green);border:1px solid rgba(62,207,142,.3);}
+  .msg.warn{background:rgba(245,185,66,.12);color:var(--amber);border:1px solid rgba(245,185,66,.3);}
+  .process-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:end;margin-top:10px;}
+  .progress-wrap{background:var(--panel2);border-radius:20px;height:10px;overflow:hidden;margin-top:8px;}
+  .progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));transition:width .3s;}
+  .stat{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+  .stat .val{font-size:24px;font-weight:700;}
+  .stat .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:4px;}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+  .icon-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:4px 8px;}
+  .icon-btn:hover{color:var(--text);}
+  .empty{color:var(--muted);font-size:13px;padding:16px;text-align:center;}
+  .userchip{background:var(--panel2);padding:6px 12px;border-radius:20px;font-size:12px;color:var(--muted);}
+  ::placeholder{color:#5c667c;}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen" class="center">
+  <div class="card login-box">
+    <h1>LN Risk Map</h1>
+    <div class="subtitle">Productivity Tracker <span class="tag" style="margin-left:6px;">Python / Flask</span></div>
+    <div class="login-tabs" id="loginTabsWrap">
+      <button class="tab active" id="tabAdminLogin" onclick="switchLoginTab('admin')">Admin Login</button>
+      <button class="tab" id="tabUserLogin" onclick="switchLoginTab('user')">Employee Login</button>
+    </div>
+
+    <div id="adminLoginForm">
+      <label>Admin Email ID</label>
+      <input type="email" id="adminEmail" placeholder="admin@company.com">
+      <label>Password</label>
+      <input type="password" id="adminPass" placeholder="••••••••">
+      <div class="row" style="margin-top:18px;">
+        <button class="btn-primary" style="width:100%" onclick="adminLogin()">Log In as Admin</button>
+      </div>
+    </div>
+
+    <div id="userLoginForm" class="hidden">
+      <label>Email ID</label>
+      <input type="email" id="userEmail" placeholder="you@company.com">
+      <label>Password</label>
+      <input type="password" id="userPass" placeholder="••••••••">
+      <div class="row" style="margin-top:18px;">
+        <button class="btn-primary" style="width:100%" onclick="userLogin()">Log In</button>
+      </div>
+    </div>
+
+    <div id="loginMsg"></div>
+  </div>
+</div>
+
+<!-- ============ ADMIN APP ============ -->
+<div id="adminApp" class="app hidden">
+  <div class="topbar">
+    <div>
+      <h1>Admin Dashboard</h1>
+      <div class="subtitle" style="margin-bottom:0">LN Risk Map — Productivity Tracker</div>
+    </div>
+    <div class="row">
+      <span class="userchip" id="adminChip"></span>
+      <span class="userchip" id="adminIdleChip" title="Auto logout timer">5:00</span>
+      <button class="btn-secondary btn-sm" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="employees" onclick="showAdminTab('employees')">Employees</button>
+    <button class="tab" data-tab="processes" onclick="showAdminTab('processes')">Processes</button>
+    <button class="tab" data-tab="productivity" onclick="showAdminTab('productivity')">Productivity Data</button>
+    <button class="tab" data-tab="notes" onclick="showAdminTab('notes')">Notes</button>
+    <button class="tab" data-tab="leaves" onclick="showAdminTab('leaves')">Leaves</button>
+    <button class="tab" data-tab="dailyentry" onclick="showAdminTab('dailyentry')">Daily Entry</button>
+  </div>
+
+  <!-- Employees Tab -->
+  <div id="tab-employees" class="admin-tab">
+    <div class="card">
+      <h2 id="empFormTitle">Add Employee</h2>
+      <input type="hidden" id="empEditId">
+      <div class="grid2">
+        <div><label>Band</label><input id="empBand" placeholder="e.g. B2"></div>
+        <div><label>Employee ID</label><input id="empEmpId" placeholder="e.g. EMP001"></div>
+        <div><label>Employee Name</label><input id="empName" placeholder="Full name"></div>
+        <div><label>Email ID</label><input id="empEmail" type="email" placeholder="employee@company.com"></div>
+        <div><label>Password</label><input id="empPass" type="text" placeholder="Login password"></div>
+      </div>
+      <div class="row" style="margin-top:16px;">
+        <button class="btn-primary" onclick="saveEmployee()">Save Employee</button>
+        <button class="btn-secondary" onclick="resetEmpForm()">Clear</button>
+      </div>
+      <div id="empMsg"></div>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <h2 style="margin:0;">Employee List</h2>
+        <button class="btn-primary btn-sm" onclick="downloadExport('full')">⬇ Export Full Database (Excel)</button>
+      </div>
+      <table>
+        <thead><tr><th>Emp ID</th><th>Name</th><th>Band</th><th>Email</th><th>Password</th><th></th></tr></thead>
+        <tbody id="empTableBody"></tbody>
+      </table>
+      <div id="empEmpty" class="empty hidden">No employees added yet.</div>
+    </div>
+  </div>
+
+  <!-- Employee View Tab -->
+  <div id="tab-empview" class="admin-tab hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <h2 style="margin:0;" id="empViewTitle">Employee Entries</h2>
+        <button class="btn-secondary btn-sm" onclick="showAdminTab('employees')">← Back to Employees</button>
+      </div>
+      <div class="subtitle" id="empViewSubtitle" style="margin-top:6px;margin-bottom:0;"></div>
+    </div>
+    <div class="card">
+      <h2>Productivity Entries</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Process</th><th>Hours</th><th>Count</th><th></th></tr></thead>
+        <tbody id="empViewProdTableBody"></tbody>
+      </table>
+      <div id="empViewProdEmpty" class="empty hidden">No entries yet.</div>
+    </div>
+    <div class="card">
+      <h2>Notes</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Description</th><th>Hour</th><th></th></tr></thead>
+        <tbody id="empViewNotesTableBody"></tbody>
+      </table>
+      <div id="empViewNotesEmpty" class="empty hidden">No notes yet.</div>
+    </div>
+    <div class="card">
+      <h2>Leaves</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Reason</th><th></th></tr></thead>
+        <tbody id="empViewLeavesTableBody"></tbody>
+      </table>
+      <div id="empViewLeavesEmpty" class="empty hidden">No leaves marked yet.</div>
+    </div>
+  </div>
+
+  <!-- Processes Tab -->
+  <div id="tab-processes" class="admin-tab hidden">
+    <div class="card">
+      <h2 id="procFormTitle">Add Process</h2>
+      <input type="hidden" id="procEditId">
+      <div class="grid2">
+        <div><label>Process Name</label><input id="procName" placeholder="e.g. Process A"></div>
+        <div><label>Target — Hours</label><input id="procTargetHours" type="number" value="8"></div>
+        <div><label>Target — 100%</label><input id="procTarget100" type="number" placeholder="e.g. 200"></div>
+        <div><label>Target Count / Hour</label><input id="procTargetCount" type="number" placeholder="e.g. 25"></div>
+      </div>
+      <div class="row" style="margin-top:16px;">
+        <button class="btn-primary" onclick="saveProcess()">Save Process</button>
+        <button class="btn-secondary" onclick="resetProcForm()">Clear</button>
+      </div>
+      <div id="procMsg"></div>
+    </div>
+    <div class="card">
+      <h2>Process List</h2>
+      <table>
+        <thead><tr><th>Process Name</th><th>Target Hours</th><th>Target 100%</th><th>Target Count/Hr</th><th></th></tr></thead>
+        <tbody id="procTableBody"></tbody>
+      </table>
+      <div id="procEmpty" class="empty hidden">No processes added yet.</div>
+    </div>
+  </div>
+
+  <!-- Productivity Data Tab -->
+  <div id="tab-productivity" class="admin-tab hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <h2 style="margin:0;">All Productivity Entries</h2>
+        <button class="btn-primary btn-sm" onclick="downloadExport('productivity')">⬇ Download Excel</button>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Emp ID</th><th>Name</th><th>Band</th><th>Process</th><th>Hours</th><th>Count</th><th></th></tr></thead>
+        <tbody id="prodTableBody"></tbody>
+      </table>
+      <div id="prodEmpty" class="empty hidden">No productivity entries yet.</div>
+    </div>
+  </div>
+
+  <!-- Notes Tab -->
+  <div id="tab-notes" class="admin-tab hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <h2 style="margin:0;">All Notes</h2>
+        <button class="btn-primary btn-sm" onclick="downloadExport('notes')">⬇ Download Excel</button>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Emp ID</th><th>Description</th><th>Hour</th><th></th></tr></thead>
+        <tbody id="notesTableBody"></tbody>
+      </table>
+      <div id="notesEmpty" class="empty hidden">No notes entries yet.</div>
+    </div>
+  </div>
+
+  <!-- Leaves Tab -->
+  <div id="tab-leaves" class="admin-tab hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <h2 style="margin:0;">All Leaves</h2>
+        <button class="btn-primary btn-sm" onclick="downloadExport('leaves')">⬇ Download Excel</button>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Emp ID</th><th>Name</th><th>Band</th><th>Reason</th><th>Marked By</th><th></th></tr></thead>
+        <tbody id="leavesTableBody"></tbody>
+      </table>
+      <div id="leavesEmpty" class="empty hidden">No leaves recorded yet.</div>
+    </div>
+  </div>
+
+  <!-- Daily Entry Tab -->
+  <div id="tab-dailyentry" class="admin-tab hidden">
+    <div class="card">
+      <h2>Daily Productivity Entry (Admin)</h2>
+      <div class="grid2">
+        <div><label>Employee</label><select id="aEntryEmpSelect" onchange="onAdminEmpSelect()"></select></div>
+        <div><label>Date</label><input type="date" id="aEntryDate"></div>
+        <div><label>Band</label><input id="aEntryBand" readonly></div>
+        <div><label>Employee ID</label><input id="aEntryEmpId" readonly></div>
+      </div>
+
+      <h2 style="margin-top:20px;">Process Entries</h2>
+      <div id="aProcessRows"></div>
+      <button class="btn-secondary btn-sm" style="margin-top:10px;" onclick="addAdminProcessRow()">+ Add</button>
+
+      <div class="msg" id="aHourMsg" style="margin-top:16px;"></div>
+      <div class="progress-wrap"><div class="progress-bar" id="aHourProgress" style="width:0%"></div></div>
+
+      <h2 style="margin-top:24px;">Notes</h2>
+      <div class="grid2">
+        <div><label>Description</label><input id="aNoteDesc" placeholder="Activity / work performed"></div>
+        <div><label>Hour</label><input id="aNoteHour" type="number" step="0.25" placeholder="e.g. 0.5"></div>
+      </div>
+
+      <div class="row" style="margin-top:20px;">
+        <button class="btn-primary" onclick="submitAdminEntry()">Save Entry</button>
+      </div>
+      <div id="aEntryMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Mark Leave for Employee</h2>
+      <div class="grid2">
+        <div><label>Leave Date</label><input type="date" id="aLeaveDate"></div>
+        <div><label>Reason (optional)</label><input id="aLeaveReason" placeholder="e.g. Sick leave"></div>
+      </div>
+      <div class="row" style="margin-top:16px;">
+        <button class="btn-secondary" onclick="markLeaveAdmin()">Mark Leave</button>
+      </div>
+      <div id="aLeaveMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ USER APP ============ -->
+<div id="userApp" class="app hidden">
+  <div class="topbar">
+    <div>
+      <h1>User Dashboard</h1>
+      <div class="subtitle" style="margin-bottom:0">LN Risk Map — Productivity Tracker</div>
+    </div>
+    <div class="row">
+      <span class="userchip" id="userChip"></span>
+      <span class="userchip" id="idleChip" title="Auto logout timer">5:00</span>
+      <button class="btn-secondary btn-sm" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-utab="entry" onclick="showUserTab('entry')">Productivity Entry</button>
+    <button class="tab" data-utab="myrecords" onclick="showUserTab('myrecords')">My Records</button>
+  </div>
+
+  <!-- Entry Tab -->
+  <div id="utab-entry" class="user-tab">
+    <div class="card">
+      <h2>Daily Productivity Entry</h2>
+      <div class="grid2">
+        <div><label>Date</label><input type="date" id="entryDate"></div>
+        <div><label>Band</label><input id="entryBand" readonly></div>
+        <div><label>Employee ID</label><input id="entryEmpId" readonly></div>
+        <div><label>Employee Name</label><input id="entryEmpName" readonly></div>
+      </div>
+
+      <h2 style="margin-top:20px;">Process Entries</h2>
+      <div id="processRows"></div>
+      <button class="btn-secondary btn-sm" style="margin-top:10px;" onclick="addProcessRow()">+ Add</button>
+
+      <div class="msg" id="hourMsg" style="margin-top:16px;"></div>
+      <div class="progress-wrap"><div class="progress-bar" id="hourProgress" style="width:0%"></div></div>
+
+      <h2 style="margin-top:24px;">Notes</h2>
+      <div class="grid2">
+        <div><label>Description</label><input id="noteDesc" placeholder="Activity / work performed"></div>
+        <div><label>Hour</label><input id="noteHour" type="number" step="0.25" placeholder="e.g. 0.5"></div>
+      </div>
+
+      <div class="row" style="margin-top:20px;">
+        <button class="btn-primary" onclick="submitEntry()">Save Entry</button>
+      </div>
+      <div id="entryMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Mark Leave</h2>
+      <div class="grid2">
+        <div><label>Leave Date</label><input type="date" id="uLeaveDate"></div>
+        <div><label>Reason (optional)</label><input id="uLeaveReason" placeholder="e.g. Sick leave"></div>
+      </div>
+      <div class="row" style="margin-top:16px;">
+        <button class="btn-secondary" onclick="markLeaveEmployee()">Mark Leave</button>
+      </div>
+      <div id="uLeaveMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Productivity Summary</h2>
+      <div class="stats-row">
+        <div class="stat"><div class="val" id="statHours">0</div><div class="lbl">Hours Logged Today</div></div>
+        <div class="stat"><div class="val" id="statCount">0</div><div class="lbl">Total Count Today</div></div>
+        <div class="stat"><div class="val" id="statPct">0%</div><div class="lbl">Productivity vs 100% Target</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Records Tab -->
+  <div id="utab-myrecords" class="user-tab hidden">
+    <div class="card">
+      <h2>My Productivity Entries</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Process</th><th>Hours</th><th>Count</th><th></th></tr></thead>
+        <tbody id="myProdTableBody"></tbody>
+      </table>
+      <div id="myProdEmpty" class="empty hidden">No entries yet.</div>
+    </div>
+    <div class="card">
+      <h2>My Notes</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Description</th><th>Hour</th><th></th></tr></thead>
+        <tbody id="myNotesTableBody"></tbody>
+      </table>
+      <div id="myNotesEmpty" class="empty hidden">No notes yet.</div>
+    </div>
+    <div class="card">
+      <h2>My Leaves</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Reason</th><th></th></tr></thead>
+        <tbody id="myLeavesTableBody"></tbody>
+      </table>
+      <div id="myLeavesEmpty" class="empty hidden">No leaves marked yet.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   API HELPER — talks to the Flask backend. Data is stored on
+   the server (data.json) so it's shared across every browser,
+   unlike the old localStorage-only version.
+   ============================================================ */
+async function api(method, url, body){
+  const opts = { method, headers:{'Content-Type':'application/json'} };
+  if(body !== undefined) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  let data = null;
+  try { data = await res.json(); } catch(e){}
+  if(!res.ok){
+    const err = (data && data.error) ? data.error : ('Request failed ('+res.status+')');
+    throw new Error(err);
+  }
+  return data;
+}
+function esc(s){
+  return String(s??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+let session = null;         // {role:'admin'|'user', employee?:{...}, email?:...}
+let processes = [];         // cached process list
+let currentEmpViewId = null;
+let processRowCount = 0;
+let adminProcessRowCount = 0;
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function switchLoginTab(which){
+  document.getElementById('tabAdminLogin').classList.toggle('active', which==='admin');
+  document.getElementById('tabUserLogin').classList.toggle('active', which==='user');
+  document.getElementById('adminLoginForm').classList.toggle('hidden', which!=='admin');
+  document.getElementById('userLoginForm').classList.toggle('hidden', which!=='user');
+  document.getElementById('loginMsg').innerHTML = '';
+}
+
+async function adminLogin(){
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPass').value;
+  const msg = document.getElementById('loginMsg');
+  try{
+    const data = await api('POST', '/api/login/admin', {email, password});
+    session = {role:'admin', email:data.email};
+    msg.innerHTML = '';
+    await enterAdmin();
+  }catch(e){
+    msg.innerHTML = '<div class="msg error">'+esc(e.message)+'</div>';
+  }
+}
+
+async function userLogin(){
+  const email = document.getElementById('userEmail').value.trim();
+  const password = document.getElementById('userPass').value;
+  const msg = document.getElementById('loginMsg');
+  try{
+    const data = await api('POST', '/api/login/user', {email, password});
+    session = {role:'user', employee:data.employee};
+    msg.innerHTML = '';
+    await enterUser();
+  }catch(e){
+    msg.innerHTML = '<div class="msg error">'+esc(e.message)+'</div>';
+  }
+}
+
+async function logout(){
+  try{ await api('POST', '/api/logout'); }catch(e){}
+  session = null;
+  idleDeadline = null;
+  document.getElementById('adminApp').classList.add('hidden');
+  document.getElementById('userApp').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('adminEmail').value='';
+  document.getElementById('adminPass').value='';
+  document.getElementById('userEmail').value='';
+  document.getElementById('userPass').value='';
+}
+
+/* ============================================================
+   ADMIN APP
+   ============================================================ */
+async function enterAdmin(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('adminApp').classList.remove('hidden');
+  document.getElementById('adminChip').textContent = session.email;
+  await Promise.all([renderEmployees(), loadProcesses(), renderProductivity(), renderNotesAdmin(), renderLeavesAdmin()]);
+  renderProcesses();
+  await initAdminEntryForm();
+  resetIdleTimer();
+}
+
+function showAdminTab(tab){
+  const panel = document.getElementById('tab-'+tab);
+  if(!panel) return;
+  const navMatch = (tab==='empview') ? 'employees' : tab;
+  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===navMatch));
+  document.querySelectorAll('.admin-tab').forEach(el=>el.classList.add('hidden'));
+  panel.classList.remove('hidden');
+  if(tab==='leaves'){ renderLeavesAdmin(); }
+  if(tab==='dailyentry'){ populateAdminEmpSelect(); }
+}
+
+/* --- Employees --- */
+let employeesCache = [];
+
+function resetEmpForm(){
+  document.getElementById('empEditId').value='';
+  document.getElementById('empBand').value='';
+  document.getElementById('empEmpId').value='';
+  document.getElementById('empName').value='';
+  document.getElementById('empEmail').value='';
+  document.getElementById('empPass').value='';
+  document.getElementById('empFormTitle').textContent='Add Employee';
+  document.getElementById('empMsg').innerHTML='';
+}
+
+async function saveEmployee(){
+  const msgEl = document.getElementById('empMsg');
+  const payload = {
+    id: document.getElementById('empEditId').value || null,
+    band: document.getElementById('empBand').value.trim(),
+    empId: document.getElementById('empEmpId').value.trim(),
+    name: document.getElementById('empName').value.trim(),
+    email: document.getElementById('empEmail').value.trim(),
+    password: document.getElementById('empPass').value,
+  };
+  try{
+    await api('POST', '/api/employees', payload);
+    msgEl.innerHTML = '<div class="msg ok">Employee saved.</div>';
+    resetEmpForm();
+    await renderEmployees();
+  }catch(e){
+    msgEl.innerHTML = '<div class="msg error">'+esc(e.message)+'</div>';
+  }
+}
+
+function editEmployee(id){
+  const emp = employeesCache.find(e=>e.id===id); if(!emp) return;
+  document.getElementById('empEditId').value = emp.id;
+  document.getElementById('empBand').value = emp.band;
+  document.getElementById('empEmpId').value = emp.empId;
+  document.getElementById('empName').value = emp.name;
+  document.getElementById('empEmail').value = emp.email;
+  document.getElementById('empPass').value = emp.password;
+  document.getElementById('empFormTitle').textContent = 'Edit Employee';
+}
+
+async function deleteEmployee(id){
+  if(!confirm('Delete this employee? This cannot be undone.')) return;
+  await api('DELETE', '/api/employees/'+id);
+  await renderEmployees();
+}
+
+async function renderEmployees(){
+  employeesCache = await api('GET', '/api/employees');
+  const tbody = document.getElementById('empTableBody');
+  tbody.innerHTML = '';
+  employeesCache.forEach(e=>{
+    tbody.innerHTML += `<tr>
+      <td>${esc(e.empId)}</td><td>${esc(e.name)}</td><td>${esc(e.band)}</td><td>${esc(e.email)}</td><td>${esc(e.password)}</td>
+      <td><button class="icon-btn" title="View this employee's entries" onclick="viewEmployeeEntries('${e.id}')">📋</button><button class="icon-btn" onclick="editEmployee('${e.id}')">✏️</button><button class="icon-btn" onclick="deleteEmployee('${e.id}')">🗑️</button></td>
+    </tr>`;
+  });
+  document.getElementById('empEmpty').classList.toggle('hidden', employeesCache.length>0);
+  if(document.getElementById('aEntryEmpSelect')) populateAdminEmpSelect();
+}
+
+/* --- Employee View (admin drills into one employee) --- */
+async function viewEmployeeEntries(id){
+  const emp = employeesCache.find(e=>e.id===id); if(!emp) return;
+  currentEmpViewId = emp.empId;
+  document.getElementById('empViewTitle').textContent = 'Entries — ' + emp.name;
+  document.getElementById('empViewSubtitle').textContent = emp.empId + ' · ' + emp.band + ' · ' + emp.email;
+  showAdminTab('empview');
+  await renderEmpViewProductivity();
+  await renderEmpViewNotes();
+  await renderEmpViewLeaves();
+}
+
+async function renderEmpViewProductivity(){
+  const tbody = document.getElementById('empViewProdTableBody');
+  if(!tbody) return;
+  const rows = await api('GET', '/api/productivity?empId='+encodeURIComponent(currentEmpViewId));
+  tbody.innerHTML='';
+  [...rows].reverse().forEach(x=>{
+    tbody.innerHTML += `<tr>
+      <td>${x.date}</td><td>${esc(x.processName)}</td><td>${x.hours}</td><td>${x.count}</td>
+      <td><button class="icon-btn" onclick="deleteProductivityEmpView('${x.id}')">🗑️</button></td>
+    </tr>`;
+  });
+  document.getElementById('empViewProdEmpty').classList.toggle('hidden', rows.length>0);
+}
+async function deleteProductivityEmpView(id){
+  if(!confirm('Delete this entry?')) return;
+  await api('DELETE', '/api/productivity/'+id);
+  await renderProductivity();
+  await renderEmpViewProductivity();
+}
+
+async function renderEmpViewNotes(){
+  const tbody = document.getElementById('empViewNotesTableBody');
+  if(!tbody) return;
+  const rows = await api('GET', '/api/notes?empId='+encodeURIComponent(currentEmpViewId));
+  tbody.innerHTML='';
+  [...rows].reverse().forEach(n=>{
+    tbody.innerHTML += `<tr>
+      <td>${n.date}</td><td>${esc(n.description)}</td><td>${n.hour}</td>
+      <td><button class="icon-btn" onclick="deleteNoteEmpView('${n.id}')">🗑️</button></td>
+    </tr>`;
+  });
+  document.getElementById('empViewNotesEmpty').classList.toggle('hidden', rows.length>0);
+}
+async function deleteNoteEmpView(id){
+  if(!confirm('Delete this note?')) return;
+  await api('DELETE', '/api/notes/'+id);
+  await renderNotesAdmin();
+  await renderEmpViewNotes();
+}
+
+async function renderEmpViewLeaves(){
+  const tbody = document.getElementById('empViewLeavesTableBody');
+  if(!tbody) return;
+  const rows = await api('GET', '/api/leaves?empId='+encodeURIComponent(currentEmpViewId));
+  tbody.innerHTML='';
+  [...rows].reverse().forEach(l=>{
+    tbody.innerHTML += `<tr>
+      <td>${l.date}</td><td>${esc(l.reason||'')}</td>
+      <td><button class="icon-btn" onclick="deleteLeaveEmpView('${l.id}')">🗑️</button></td>
+    </tr>`;
+  });
+  document.getElementById('empViewLeavesEmpty').classList.toggle('hidden', rows.length>0);
+}
+async function deleteLeaveEmpView(id){
+  if(!confirm('Delete this leave record?')) return;
+  await api('DELETE', '/api/leaves/'+id);
+  await renderLeavesAdmin();
+  await renderEmpViewLeaves();
+}
+
+/* --- Processes --- */
+let processesCache = [];
+
+function resetProcForm(){
+  document.getElementById('procEditId').value='';
+  document.getElementById('procName').value='';
+  document.getElementById('procTargetHours').value='8';
+  document.getElementById('procTarget100').value='';
+  document.getElementById('procTargetCount').value='';
+  document.getElementById('procFormTitle').textContent='Add Process';
+  document.getElementById('procMsg').innerHTML='';
+}
+
+async function saveProcess(){
+  const msgEl = document.getElementById('procMsg');
+  const payload = {
+    id: document.getElementById('procEditId').value || null,
+    name: document.getElementById('procName').value.trim(),
+    targetHours: parseFloat(document.getElementById('procTargetHours').value)||0,
+    target100: parseFloat(document.getElementById('procTarget100').value)||0,
+    targetCount: parseFloat(document.getElementById('procTargetCount').value)||0,
+  };
+  try{
+    await api('POST', '/api/processes', payload);
+    msgEl.innerHTML = '<div class="msg ok">Process saved.</div>';
+    resetProcForm();
+    await renderProcesses();
+  }catch(e){
+    msgEl.innerHTML = '<div class="msg error">'+esc(e.message)+'</div>';
+  }
+}
+
+function editProcess(id){
+  const p = processesCache.find(p=>p.id===id); if(!p) return;
+  document.getElementById('procEditId').value = p.id;
+  document.getElementById('procName').value = p.name;
+  document.getElementById('procTargetHours').value = p.targetHours;
+  document.getElementById('procTarget100').value = p.target100;
+  document.getElementById('procTargetCount').value = p.targetCount;
+  document.getElementById('procFormTitle').textContent = 'Edit Process';
+}
+
+async function deleteProcess(id){
+  if(!confirm('Delete this process?')) return;
+  await api('DELETE', '/api/processes/'+id);
+  await renderProcesses();
+}
+
+async function loadProcesses(){
+  processesCache = await api('GET', '/api/processes');
+  processes = processesCache;
+}
+
+async function renderProcesses(){
+  await loadProcesses();
+  const tbody = document.getElementById('procTableBody');
+  tbody.innerHTML = '';
+  processesCache.forEach(p=>{
+    tbody.innerHTML += `<tr>
+      <td>${esc(p.name)}</td><td>${p.targetHours}</td><td>${p.target100}</td><td>${p.targetCount}</td>
+      <td><button class="icon-btn" onclick="editProcess('${p.id}')">✏️</button><button class="icon-btn" onclick="deleteProcess('${p.id}')">🗑️</button></td>
+    </tr>`;
+  });
+  document.getElementById('procEmpty').classList.toggle('hidden', processesCache.length>0);
+}
+
+/* --- Productivity (admin view) --- */
+async function deleteProductivity(id){
+  if(!confirm('Delete this entry?')) return;
+  await api('DELETE', '/api/productivity/'+id);
+  await renderProductivity();
+}
+async function renderProductivity(){
+  const rows = await api('GET', '/api/productivity');
+  const tbody = document.getElementById('prodTableBody');
+  tbody.innerHTML='';
+  [...rows].reverse().forEach(x=>{
+    tbody.innerHTML += `<tr>
+      <td>${x.date}</td><td>${esc(x.empId)}</td><td>${esc(x.empName)}</td><td>${esc(x.band)}</td>
+      <td>${esc(x.processName)}</td><td>${x.hours}</td><td>${x.count}</td>
+      <td><button class="icon-btn" onclick="deleteProductivity('${x.id}')">🗑️</button></td>
+    </tr>`;
+  });
+  document.getElementById('prodEmpty').classList.toggle('hidden', rows.length>0);
+}
+
+/* --- Notes (admin view) --- */
+async function deleteNoteAdmin(id){
+  if(!confirm('Delete this note?')) return;
+  await api('DELETE', '/api/notes/'+id);
+  await renderNotesAdmin();
+}
+async function renderNotesAdmin(){
+  const rows = await api('GET', '/api/notes');
+  const tbody = document.getElementById('notesTableBody');
+  tbody.innerHTML='';
+  [...rows].reverse().forEach(n=>{
+    tbody.innerHTML += `<tr>
+      <td>${n.date}</td><td>${esc(n.empId)}</td><td>${esc(n.description)}</td><td>${n.hour}</td>
+      <td><button class="icon-btn" onclick="deleteNoteAdmin('${n.id}')">🗑️</button></td>
+    </tr>`;
+  });
+  document.getElementById('notesEmpty').classList.toggle('hidden', rows.length>0);
+}
+
+/* --- Leaves (admin view) --- */
+async function deleteLeave(id){
+  if(!confirm('Delete this leave record?')) return;
+  await api('DELETE', '/api/leaves/'+id);
+  await renderLeavesAdmin();
+}
+async function renderLeavesAdmin(){
+  const tbody = document.getElementById('leavesTableBody');
+  if(!tbody) return;
+  const rows = await api('GET', '/api/leaves');
+  tbody.innerHTML='';
+  [...rows].reverse().forEach(l=>{
+    tbody.innerHTML += `<tr>
+      <td>${l.date}</td><td>${esc(l.empId)}</td><td>${esc(l.empName)}</td><td>${esc(l.band)}</td>
+      <td>${esc(l.reason||'')}</td><td>${esc(l.markedBy||'employee')}</td>
+      <td><button class="icon-btn" onclick="deleteLeave('${l.id}')">🗑️</button></td>
+    </tr>`;
+  });
+  document.getElementById('leavesEmpty').classList.toggle('hidden', rows.length>0);
+}
+
+/* ============================================================
+   ADMIN — DAILY ENTRY (on behalf of an employee)
+   ============================================================ */
+function populateAdminEmpSelect(){
+  const sel = document.getElementById('aEntryEmpSelect');
+  if(!sel) return;
+  const prevVal = sel.value;
+  let opts = '<option value="">Select employee</option>';
+  employeesCache.forEach(e=>{
+    opts += `<option value="${esc(e.empId)}">${esc(e.name)} (${esc(e.empId)})</option>`;
+  });
+  sel.innerHTML = opts;
+  if(prevVal && employeesCache.some(e=>e.empId===prevVal)) sel.value = prevVal;
+}
+
+function onAdminEmpSelect(){
+  const empId = document.getElementById('aEntryEmpSelect').value;
+  const emp = employeesCache.find(e=>e.empId===empId);
+  document.getElementById('aEntryBand').value = emp ? emp.band : '';
+  document.getElementById('aEntryEmpId').value = emp ? emp.empId : '';
+}
+
+async function initAdminEntryForm(){
+  populateAdminEmpSelect();
+  document.getElementById('aEntryDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('aLeaveDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('aEntryBand').value = '';
+  document.getElementById('aEntryEmpId').value = '';
+  document.getElementById('aProcessRows').innerHTML = '';
+  adminProcessRowCount = 0;
+  addAdminProcessRow();
+  updateAdminHourValidation();
+}
+
+function processOptionsHTML(selected){
+  let opts = '<option value="">Select process</option>';
+  processes.forEach(p=>{
+    opts += `<option value="${esc(p.name)}" ${p.name===selected?'selected':''}>${esc(p.name)}</option>`;
+  });
+  return opts;
+}
+
+function addAdminProcessRow(){
+  adminProcessRowCount++;
+  const id = 'arow_'+adminProcessRowCount;
+  const wrap = document.createElement('div');
+  wrap.className = 'process-row';
+  wrap.id = id;
+  wrap.innerHTML = `
+    <div><label>Process Name</label><select onchange="updateAdminHourValidation()">${processOptionsHTML('')}</select></div>
+    <div><label>Hour</label><input type="number" step="0.25" min="0" placeholder="Hours" oninput="updateAdminHourValidation()"></div>
+    <div><label>Count</label><input type="number" min="0" placeholder="Count"></div>
+    <div><button class="btn-danger btn-sm" onclick="removeAdminProcessRow('${id}')">Remove</button></div>
+  `;
+  document.getElementById('aProcessRows').appendChild(wrap);
+  updateAdminHourValidation();
+}
+function removeAdminProcessRow(id){
+  const el = document.getElementById(id);
+  if(el) el.remove();
+  updateAdminHourValidation();
+}
+function getAdminProcessRowsData(){
+  const rows = document.querySelectorAll('#aProcessRows .process-row');
+  const data = [];
+  rows.forEach(r=>{
+    const select = r.querySelector('select');
+    const inputs = r.querySelectorAll('input');
+    const hour = parseFloat(inputs[0].value) || 0;
+    const count = parseFloat(inputs[1].value) || 0;
+    data.push({ processName: select.value, hour, count });
+  });
+  return data;
+}
+function updateAdminHourValidation(){
+  const data = getAdminProcessRowsData();
+  const totalHours = data.reduce((s,r)=>s+r.hour,0);
+  const msgEl = document.getElementById('aHourMsg');
+  const bar = document.getElementById('aHourProgress');
+  const pct = Math.min((totalHours/8)*100, 100);
+  bar.style.width = pct+'%';
+  bar.style.background = totalHours > 8 ? 'linear-gradient(90deg,#f2545b,#f5b942)' : 'linear-gradient(90deg,#5b8cff,#3ecf8e)';
+
+  if(totalHours > 8){
+    msgEl.className='msg error';
+    msgEl.textContent = `You have entered ${totalHours} hours, which exceeds the 8-hour limit. Please reduce your entries.`;
+  } else if(totalHours === 8){
+    msgEl.className='msg ok';
+    msgEl.textContent = 'The 8-hour working target has been completed.';
+  } else {
+    msgEl.className='msg warn';
+    msgEl.textContent = `You have entered ${totalHours} hours. Remaining working hours: ${(8-totalHours)}.`;
+  }
+  return totalHours;
+}
+
+async function submitAdminEntry(){
+  const entryMsg = document.getElementById('aEntryMsg');
+  const empId = document.getElementById('aEntryEmpSelect').value;
+  const date = document.getElementById('aEntryDate').value;
+  const entries = getAdminProcessRowsData();
+  const noteDesc = document.getElementById('aNoteDesc').value.trim();
+  const noteHour = parseFloat(document.getElementById('aNoteHour').value)||0;
+
+  try{
+    const data = await api('POST', '/api/productivity', {
+      empId, date, entries, note: {description: noteDesc, hour: noteHour}
+    });
+    entryMsg.innerHTML = `<div class="msg ok">Entry saved for ${esc(data.employee)}.</div>`;
+    document.getElementById('aNoteDesc').value='';
+    document.getElementById('aNoteHour').value='';
+    document.getElementById('aProcessRows').innerHTML='';
+    adminProcessRowCount = 0;
+    addAdminProcessRow();
+    await renderProductivity();
+    await renderNotesAdmin();
+  }catch(e){
+    entryMsg.innerHTML = '<div class="msg error">'+esc(e.message)+'</div>';
+  }
+}
+
+async function markLeaveAdmin(){
+  const msgEl = document.getElementById('aLeaveMsg');
+  const empId = document.getElementById('aEntryEmpSelect').value;
+  const date = document.getElementById('aLeaveDate').value;
+  const reason = document.getElementById('aLeaveReason').value.trim();
+  try{
+    const data = await api('POST', '/api/leaves', {empId, date, reason});
+    msgEl.innerHTML = `<div class="msg ok">Leave marked for ${esc(data.employee)} on ${date}.</div>`;
+    document.getElementById('aLeaveReason').value='';
+    await renderLeavesAdmin();
+  }catch(e){
+    msgEl.innerHTML = '<div class="msg error">'+esc(e.message)+'</div>';
+  }
+}
+
+/* ============================================================
+   USER APP
+   ============================================================ */
+async function enterUser(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('userApp').classList.remove('hidden');
+  const emp = session.employee;
+  document.getElementById('userChip').textContent = emp.name + ' • ' + emp.empId;
+  document.getElementById('entryBand').value = emp.band;
+  document.getElementById('entryEmpId').value = emp.empId;
+  document.getElementById('entryEmpName').value = emp.name;
+  document.getElementById('entryDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('uLeaveDate').value = new Date().toISOString().slice(0,10);
+  await loadProcesses();
+  document.getElementById('processRows').innerHTML='';
+  processRowCount = 0;
+  addProcessRow();
+  updateHourValidation();
+  showUserTab('entry');
+  await renderMyProductivity();
+  await updateSummaryStats();
+  resetIdleTimer();
+}
+
+function showUserTab(tab){
+  document.querySelectorAll('#userApp .tabs .tab').forEach(t=>t.classList.toggle('active', t.dataset.utab===tab));
+  document.querySelectorAll('.user-tab').forEach(el=>el.classList.add('hidden'));
+  document.getElementById('utab-'+tab).classList.remove('hidden');
+  if(tab==='myrecords'){ renderMyProductivity(); }
+}
+
+function addProcessRow(){
+  processRowCount++;
+  const id = 'row_'+processRowCount;
+  const wrap = document.createElement('div');
+  wrap.className = 'process-row';
+  wrap.id = id;
+  wrap.innerHTML = `
+    <div><label>Process Name</label><select onchange="updateHourValidation()">${processOptionsHTML('')}</select></div>
+    <div><label>Hour</label><input type="number" step="0.25" min="0" placeholder="Hours" oninput="updateHourValidation()"></div>
+    <div><label>Count</label><input type="number" min="0" placeholder="Count"></div>
+    <div><button class="btn-danger btn-sm" onclick="removeProcessRow('${id}')">Remove</button></div>
+  `;
+  document.getElementById('processRows').appendChild(wrap);
+  updateHourValidation();
+}
+function removeProcessRow(id){
+  const el = document.getElementById(id);
+  if(el) el.remove();
+  updateHourValidation();
+}
+
+function getProcessRowsData(){
+  const rows = document.querySelectorAll('#processRows .process-row');
+  const data = [];
+  rows.forEach(r=>{
+    const select = r.querySelector('select');
+    const inputs = r.querySelectorAll('input');
+    const hour = parseFloat(inputs[0].value) || 0;
+    const count = parseFloat(inputs[1].value) || 0;
+    data.push({ processName: select.value, hour, count });
+  });
+  return data;
+}
+
+function updateHourValidation(){
+  const data = getProcessRowsData();
+  const totalHours = data.reduce((s,r)=>s+r.hour,0);
+  const msgEl = document.getElementById('hourMsg');
+  const bar = document.getElementById('hourProgress');
+  const pct = Math.min((totalHours/8)*100, 100);
+  bar.style.width = pct+'%';
+  bar.style.background = totalHours > 8 ? 'linear-gradient(90deg,#f2545b,#f5b942)' : 'linear-gradient(90deg,#5b8cff,#3ecf8e)';
+
+  if(totalHours > 8){
+    msgEl.className='msg error';
+    msgEl.textContent = `You have entered ${totalHours} hours, which exceeds the 8-hour limit. Please reduce your entries.`;
+  } else if(totalHours === 8){
+    msgEl.className='msg ok';
+    msgEl.textContent = 'Your 8-hour working target has been completed.';
+  } else {
+    msgEl.className='msg warn';
+    msgEl.textContent = `You have entered ${totalHours} hours. Remaining working hours: ${(8-totalHours)}.`;
+  }
+  return totalHours;
+}
+
+async function submitEntry(){
+  const entryMsg = document.getElementById('entryMsg');
+  const date = document.getElementById('entryDate').value;
+  const entries = getProcessRowsData();
+  const noteDesc = document.getElementById('noteDesc').value.trim();
+  const noteHour = parseFloat(document.getElementById('noteHour').value)||0;
+
+  try{
+    await api('POST', '/api/productivity', {
+      date, entries, note: {description: noteDesc, hour: noteHour}
+    });
+    entryMsg.innerHTML = '<div class="msg ok">Entry saved successfully.</div>';
+    document.getElementById('noteDesc').value='';
+    document.getElementById('noteHour').value='';
+    document.getElementById('processRows').innerHTML='';
+    processRowCount = 0;
+    addProcessRow();
+    await renderMyProductivity();
+    await updateSummaryStats();
+  }catch(e){
+    entryMsg.innerHTML = '<div class="msg error">'+esc(e.message)+'</div>';
+  }
+}
+
+async function markLeaveEmployee(){
+  const msgEl = document.getElementById('uLeaveMsg');
+  const date = document.getElementById('uLeaveDate').value;
+  const reason = document.getElementById('uLeaveReason').value.trim();
+  try{
+    await api('POST', '/api/leaves', {date, reason});
+    msgEl.innerHTML = `<div class="msg ok">Leave marked for ${date}.</div>`;
+    document.getElementById('uLeaveReason').value='';
+    await renderMyLeaves();
+  }catch(e){
+    msgEl.innerHTML = '<div class="msg error">'+esc(e.message)+'</div>';
+  }
+}
+
+let myProdCache = [], myNotesCache = [];
+
+async function renderMyProductivity(){
+  myProdCache = await api('GET', '/api/productivity');
+  const tbody = document.getElementById('myProdTableBody');
+  tbody.innerHTML='';
+  [...myProdCache].reverse().slice(0,25).forEach(x=>{
+    tbody.innerHTML += `<tr><td>${x.date}</td><td>${esc(x.processName)}</td><td>${x.hours}</td><td>${x.count}</td>
+      <td><button class="icon-btn" onclick="editMyProductivity('${x.id}')">✏️</button><button class="icon-btn" onclick="deleteMyProductivity('${x.id}')">🗑️</button></td></tr>`;
+  });
+  document.getElementById('myProdEmpty').classList.toggle('hidden', myProdCache.length>0);
+
+  myNotesCache = await api('GET', '/api/notes');
+  const ntbody = document.getElementById('myNotesTableBody');
+  if(ntbody){
+    ntbody.innerHTML='';
+    [...myNotesCache].reverse().slice(0,25).forEach(n=>{
+      ntbody.innerHTML += `<tr><td>${n.date}</td><td>${esc(n.description)}</td><td>${n.hour}</td>
+        <td><button class="icon-btn" onclick="editMyNote('${n.id}')">✏️</button><button class="icon-btn" onclick="deleteMyNote('${n.id}')">🗑️</button></td></tr>`;
+    });
+    document.getElementById('myNotesEmpty').classList.toggle('hidden', myNotesCache.length>0);
+  }
+
+  await renderMyLeaves();
+  await updateSummaryStats();
+}
+
+async function editMyProductivity(id){
+  const rec = myProdCache.find(x=>x.id===id); if(!rec) return;
+  const newHours = prompt(`Hours for "${rec.processName}" on ${rec.date}:`, rec.hours);
+  if(newHours===null) return;
+  const newCount = prompt(`Count for "${rec.processName}" on ${rec.date}:`, rec.count);
+  if(newCount===null) return;
+  await api('PUT', '/api/productivity/'+id, {hours: parseFloat(newHours)||0, count: parseFloat(newCount)||0});
+  await renderMyProductivity();
+}
+async function deleteMyProductivity(id){
+  if(!confirm('Delete this productivity entry?')) return;
+  await api('DELETE', '/api/productivity/'+id);
+  await renderMyProductivity();
+}
+
+async function editMyNote(id){
+  const rec = myNotesCache.find(n=>n.id===id); if(!rec) return;
+  const newDesc = prompt('Description:', rec.description);
+  if(newDesc===null) return;
+  const newHour = prompt('Hour:', rec.hour);
+  if(newHour===null) return;
+  await api('PUT', '/api/notes/'+id, {description: newDesc.trim(), hour: parseFloat(newHour)||0});
+  await renderMyProductivity();
+}
+async function deleteMyNote(id){
+  if(!confirm('Delete this note?')) return;
+  await api('DELETE', '/api/notes/'+id);
+  await renderMyProductivity();
+}
+
+let myLeavesCache = [];
+async function renderMyLeaves(){
+  const tbody = document.getElementById('myLeavesTableBody');
+  if(!tbody) return;
+  myLeavesCache = await api('GET', '/api/leaves');
+  tbody.innerHTML='';
+  [...myLeavesCache].reverse().slice(0,25).forEach(l=>{
+    tbody.innerHTML += `<tr><td>${l.date}</td><td>${esc(l.reason||'')}</td>
+      <td><button class="icon-btn" onclick="editMyLeave('${l.id}')">✏️</button><button class="icon-btn" onclick="deleteMyLeave('${l.id}')">🗑️</button></td></tr>`;
+  });
+  document.getElementById('myLeavesEmpty').classList.toggle('hidden', myLeavesCache.length>0);
+}
+async function editMyLeave(id){
+  const rec = myLeavesCache.find(l=>l.id===id); if(!rec) return;
+  const newReason = prompt(`Reason for leave on ${rec.date}:`, rec.reason||'');
+  if(newReason===null) return;
+  await api('PUT', '/api/leaves/'+id, {reason: newReason.trim()});
+  await renderMyLeaves();
+}
+async function deleteMyLeave(id){
+  if(!confirm('Delete this leave record?')) return;
+  await api('DELETE', '/api/leaves/'+id);
+  await renderMyLeaves();
+}
+
+/* ============================================================
+   EXCEL EXPORT — generated server-side by Flask (openpyxl)
+   ============================================================ */
+function downloadExport(kind){
+  window.location.href = '/api/export/'+kind;
+}
+
+async function updateSummaryStats(){
+  const date = document.getElementById('entryDate').value;
+  const todays = myProdCache.filter(x=>x.date===date);
+  const totalHours = todays.reduce((s,x)=>s+x.hours,0);
+  const totalCount = todays.reduce((s,x)=>s+x.count,0);
+
+  let pctSum = 0, pctWeight = 0;
+  todays.forEach(x=>{
+    const proc = processes.find(p=>p.name===x.processName);
+    if(proc && proc.target100>0){
+      const achievedPct = (x.count / proc.target100) * 100;
+      pctSum += achievedPct * x.hours;
+      pctWeight += x.hours;
+    }
+  });
+  const overallPct = pctWeight>0 ? (pctSum/pctWeight) : 0;
+
+  document.getElementById('statHours').textContent = totalHours;
+  document.getElementById('statCount').textContent = totalCount;
+  document.getElementById('statPct').textContent = overallPct.toFixed(1)+'%';
+}
+
+document.getElementById('entryDate') && document.getElementById('entryDate').addEventListener('change', ()=>{
+  updateSummaryStats();
+});
+
+/* ============================================================
+   AUTO LOGOUT — 5 minutes of inactivity
+   ============================================================ */
+const IDLE_LIMIT_MS = 5 * 60 * 1000;
+let idleDeadline = null;
+let idleInterval = null;
+
+function resetIdleTimer(){
+  if(!session) return;
+  idleDeadline = Date.now() + IDLE_LIMIT_MS;
+}
+
+function startIdleWatcher(){
+  ['mousemove','mousedown','keydown','scroll','touchstart','click'].forEach(evt=>{
+    document.addEventListener(evt, resetIdleTimer, {passive:true});
+  });
+  resetIdleTimer();
+  if(idleInterval) clearInterval(idleInterval);
+  idleInterval = setInterval(()=>{
+    if(!session || !idleDeadline) return;
+    const remainingMs = idleDeadline - Date.now();
+    const chip = document.getElementById('idleChip');
+    if(remainingMs <= 0){
+      alert('You have been logged out due to 5 minutes of inactivity.');
+      logout();
+      return;
+    }
+    const mins = Math.floor(remainingMs/60000);
+    const secs = Math.floor((remainingMs%60000)/1000);
+    const label = mins+':'+String(secs).padStart(2,'0');
+    if(chip) chip.textContent = label;
+    const aChip = document.getElementById('adminIdleChip');
+    if(aChip) aChip.textContent = label;
+  }, 1000);
+}
+
+/* ------------------------------------------------------------
+   SEPARATE LOGIN LINKS
+     /#admin            -> admin login
+     /#employee          -> employee login (blank)
+     /#employee=EMP001   -> employee login, pre-filled email
+   ------------------------------------------------------------ */
+function applyLoginLinkMode(){
+  const rawHash = window.location.hash.replace('#','');
+  const [modeRaw, param] = rawHash.split('=');
+  const mode = (modeRaw||'').toLowerCase();
+  const tabsWrap = document.getElementById('loginTabsWrap');
+  if(tabsWrap) tabsWrap.classList.add('hidden');
+
+  if(mode === 'employee' || mode === 'user'){
+    switchLoginTab('user');
+    if(param){
+      const emp = employeesCache.find(e=>e.empId===decodeURIComponent(param));
+      const emailField = document.getElementById('userEmail');
+      if(emp && emailField) emailField.value = emp.email;
+    }
+    return 'user';
+  } else if(mode === 'admin'){
+    switchLoginTab('admin');
+    return 'admin';
+  } else {
+    switchLoginTab('admin');
+    return null;
+  }
+}
+window.addEventListener('hashchange', applyLoginLinkMode);
+
+function copyLoginLink(mode){
+  const base = window.location.origin + window.location.pathname;
+  const link = `${base}#${mode}`;
+  const label = mode === 'admin' ? 'Admin Login link' : 'Employee Login link';
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(()=>{
+      alert(`${label} copied to clipboard:\n\n${link}`);
+    }).catch(()=>{
+      prompt(`Copy this ${label} and share it:`, link);
+    });
+  } else {
+    prompt(`Copy this ${label} and share it:`, link);
+  }
+}
+
+/* ------------------------------------------------------------
+   INIT — resume session server-side (Flask session cookie)
+   ------------------------------------------------------------ */
+(async function initApp(){
+  applyLoginLinkMode();
+  try{
+    const me = await api('GET', '/api/me');
+    if(me.role === 'admin'){
+      session = {role:'admin', email: me.email};
+      await enterAdmin();
+    } else if(me.role === 'user'){
+      session = {role:'user', employee: me.employee};
+      await enterUser();
+    } else {
+      document.getElementById('adminApp').classList.add('hidden');
+      document.getElementById('userApp').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      applyLoginLinkMode();
+    }
+  }catch(e){
+    document.getElementById('loginScreen').classList.remove('hidden');
+  }
+  startIdleWatcher();
+})();
+</script>
+</body>
+</html>
